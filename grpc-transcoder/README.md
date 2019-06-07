@@ -108,5 +108,68 @@ spec:
       printOptions:
         alwaysPrintPrimitiveFields: True
 ```
+## Example
 
-#### TODO: full example including protos, k8s service + deployment definition showing full e2e setup
+
+1) generate the proto-descriptor
+
+```sh
+docker run --user $UID --rm -v `pwd`:/defs uber/prototool:latest prototool generate /defs/example
+```
+
+or using protoc
+```sh
+protoc \
+  --descriptor_set_out=example/gen/descriptors/example.proto-descriptor \
+  --include_imports \
+  --go_out=plugins=grpc:. \
+  example/fortune.proto
+```
+
+
+2) generate istio yaml
+
+```sh
+grpc-transcoder \
+  --port 50051 \
+  --service fortune-teller-app \
+  --descriptor example/gen/descriptors/example.proto-descriptor > example/k8s/fortune-filter.yaml
+```
+
+
+3) enable Istio auto-injection
+```sh
+kubectl label namespace default istio-injection=enabled --overwrite
+```
+
+4) deploy fortune-teller application and service
+
+```sh
+kubectl apply -f example/k8s/fortune-app.yaml
+```
+
+5) deploy envoy filter
+```sh
+kubectl apply -f example/k8s/fortune-filter.yaml
+```
+
+6) export pod name and service ip
+```sh
+export SERVICE_IP=$(kubectl get service fortune-teller-app -n default -o jsonpath='{.spec.clusterIP}')
+export POD_NAME=$(kubectl get pods --namespace default -l "app=fortune-teller-app" -o jsonpath="{.items[0].metadata.name}")
+```
+
+7) test grpc endpoint
+```sh
+grpcurl -plaintext $SERVICE_IP:80 build.stack.fortune.FortuneTeller/Predict
+```
+
+8) test http endpoint
+```sh
+curl -X POST http://$SERVICE_IP:80/build.stack.fortune.FortuneTeller/Predict
+```
+
+#### Debugging
+```
+istioctl proxy-config listeners $POD_NAME -o json
+```

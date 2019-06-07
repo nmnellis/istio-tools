@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: fortune-teller-app
+  labels:
+    app: fortune-teller-app
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: fortune-teller-app
+    spec:
+      containers:
+      - name: fortune-teller-app
+        image: quay.io/kubernetes-ingress-controller/grpc-fortune-teller:0.1
+        ports:
+        - containerPort: 50051
+          name: grpc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortune-teller-app
+  labels:
+    app: fortune-teller-app
+spec:
+  selector:
+    app: fortune-teller-app
+  ports:
+  - port: 80
+    targetPort: 50051
+    name: grpc

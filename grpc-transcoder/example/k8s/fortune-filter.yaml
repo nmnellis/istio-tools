@@ -1,0 +1,24 @@
+# Created by github.com/tetratelabs/istio-tools/grpc-transcoder
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: fortune-teller-app
+spec:
+  workloadLabels:
+    app: fortune-teller-app
+  filters:
+  - listenerMatch:
+      portNumber: 50051
+      listenerType: SIDECAR_INBOUND
+    insertPosition:
+      index: BEFORE
+      relativeTo: envoy.router
+    filterName: envoy.grpc_json_transcoder
+    filterType: HTTP
+    filterConfig:
+      services:  
+      - build.stack.fortune.FortuneTeller
+      protoDescriptorBin: CuYBChVleGFtcGxlL2ZvcnR1bmUucHJvdG8SE2J1aWxkLnN0YWNrLmZvcnR1bmUiEwoRUHJlZGljdGlvblJlcXVlc3QiLgoSUHJlZGljdGlvblJlc3BvbnNlEhgKB21lc3NhZ2UYASABKAlSB21lc3NhZ2UyawoNRm9ydHVuZVRlbGxlchJaCgdQcmVkaWN0EiYuYnVpbGQuc3RhY2suZm9ydHVuZS5QcmVkaWN0aW9uUmVxdWVzdBonLmJ1aWxkLnN0YWNrLmZvcnR1bmUuUHJlZGljdGlvblJlc3BvbnNlYgZwcm90bzM=
+      printOptions:
+        alwaysPrintPrimitiveFields: True
+---

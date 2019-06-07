@@ -1,0 +1,9 @@
+protoc:
+  version: 3.7.1
+generate:
+  plugins:
+    - name: descriptor_set
+      output: gen/descriptors
+      file_suffix: proto-descriptor
+      include_imports: false
+      include_source_info: false
