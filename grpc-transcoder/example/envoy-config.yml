@@ -1,0 +1,53 @@
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9901 }         #1
+
+static_resources:
+  listeners:
+  - name: main-listener
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 51051 }      #2
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          access_log:
+          - name: envoy.file_access_log
+            config:
+              path: "/dev/stdout"
+          stat_prefix: grpc_json
+          codec_type: AUTO
+          route_config:
+            name: local_route
+            virtual_hosts:
+            - name: local_service
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" , grpc: {}}  #grpc:{} means that requests are only forwarded if they are found in the grpc service definition, returning 404 for others
+                route: { cluster: fortune-teller, timeout: { seconds: 5 } }   #3b
+          http_filters:
+          - name: envoy.grpc_json_transcoder
+            # configuration docs: https://github.com/envoyproxy/envoy/blob/master/api/envoy/config/filter/http/transcoder/v2/transcoder.proto
+            config:
+              proto_descriptor: "/data/example.proto-descriptor"
+              services: ["build.stack.fortune.FortuneTeller"]
+              # auto_mapping: true # allows for calling the proto directly  /<package>.<service>/<method>
+              print_options:
+                add_whitespace: true
+                always_print_primitive_fields: true
+                always_print_enums_as_ints: false
+                preserve_proto_field_names: false
+          - name: envoy.router
+
+  clusters:
+  - name: fortune-teller
+    connect_timeout: 1.25s
+    type: logical_dns
+    lb_policy: round_robin
+    dns_lookup_family: V4_ONLY
+    http2_protocol_options: {}
+    hosts:
+    - socket_address:
+        address: fortune-teller
+        port_value: 50051

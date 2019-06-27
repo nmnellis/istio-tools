@@ -1,0 +1,16 @@
+version: "3" 
+
+services:
+  envoy:
+    image: envoyproxy/envoy-dev
+    volumes:
+      - ./gen/descriptors/example.proto-descriptor:/data/example.proto-descriptor:ro
+      - ./envoy-config.yml:/etc/envoy/envoy.yaml:ro
+    ports:
+      - "51051:51051"
+
+  fortune-teller:
+    image:
+      quay.io/kubernetes-ingress-controller/grpc-fortune-teller:0.1
+    ports:
+      - "50051:50051"

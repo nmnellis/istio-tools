@@ -1,14 +1,18 @@
 syntax = "proto3";
 
 package build.stack.fortune;
+// required to add annotations to the rpc calls
+import "google/api/annotations.proto";
 
-message PredictionRequest {
-}
+message PredictionRequest { string user_id = 1; }
 
-message PredictionResponse {
-    string message = 1;
-}
+message PredictionResponse { string message = 1; }
 
 service FortuneTeller {
-    rpc Predict(PredictionRequest) returns (PredictionResponse);
+  rpc Predict(PredictionRequest) returns (PredictionResponse) {
+    option (google.api.http) = {
+      post : "/v1/fortune/{user_id}"
+      body : "reservation"
+    };
+  };
 }
