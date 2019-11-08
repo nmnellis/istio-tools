@@ -38,6 +38,7 @@ static_resources:
                 always_print_primitive_fields: true
                 always_print_enums_as_ints: false
                 preserve_proto_field_names: false
+                convert_grpc_status: true
           - name: envoy.router
 
   clusters:
